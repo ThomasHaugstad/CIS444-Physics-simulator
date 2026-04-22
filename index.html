@@ -3,278 +3,520 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Physics Sim - First Version</title>
+  <title>Physics Sim - Learning Edition</title>
   <style>
+    :root {
+      --bg-1: #09111f;
+      --bg-2: #111c33;
+      --panel: rgba(14, 24, 45, 0.9);
+      --panel-2: rgba(20, 33, 60, 0.92);
+      --line: rgba(148, 163, 184, 0.22);
+      --text: #e5eefc;
+      --muted: #9cb0d0;
+      --accent: #6ee7ff;
+      --accent-2: #8b5cf6;
+      --accent-3: #f97316;
+      --success: #22c55e;
+      --danger: #f43f5e;
+      --warning: #fbbf24;
+      --shadow: 0 20px 40px rgba(0, 0, 0, 0.28);
+      --radius: 22px;
+    }
+
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f7fb;
-      color: #1f2937;
+      min-height: 100vh;
+      font-family: Inter, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(110, 231, 255, 0.08), transparent 30%),
+        radial-gradient(circle at top right, rgba(139, 92, 246, 0.1), transparent 25%),
+        linear-gradient(140deg, var(--bg-1), var(--bg-2));
     }
 
     .app {
-      max-width: 1100px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 24px;
     }
 
-    h1 {
-      margin-bottom: 8px;
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
+      margin-bottom: 22px;
+      padding: 22px 24px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: linear-gradient(135deg, rgba(20, 33, 60, 0.88), rgba(11, 18, 33, 0.92));
+      box-shadow: var(--shadow);
     }
 
-    .subtitle {
-      margin-top: 0;
-      color: #4b5563;
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 720px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .hero-badge {
+      white-space: nowrap;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: rgba(110, 231, 255, 0.1);
+      border: 1px solid rgba(110, 231, 255, 0.24);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.95rem;
     }
 
     .layout {
       display: grid;
-      grid-template-columns: 320px 1fr;
+      grid-template-columns: 360px minmax(0, 1fr) 320px;
       gap: 20px;
       align-items: start;
     }
 
-    .panel,
-    .canvas-panel {
-      background: white;
-      border-radius: 16px;
-      padding: 18px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
     }
 
-    .panel h2,
-    .canvas-panel h2 {
-      margin-top: 0;
-      font-size: 1.1rem;
+    .panel-inner {
+      padding: 20px;
+    }
+
+    .panel h2, .panel h3 {
+      margin: 0 0 14px;
+      letter-spacing: -0.03em;
     }
 
     .control-group {
       margin-bottom: 14px;
     }
 
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    input,
-    select,
-    button {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #cbd5e1;
-      font-size: 0.95rem;
-    }
-
-    input:focus,
-    select:focus {
-      outline: 2px solid #38bdf8;
-      border-color: #38bdf8;
-    }
-
-    .button-row {
+    .control-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
       gap: 10px;
-      margin-top: 10px;
+      margin-bottom: 7px;
+      font-size: 0.9rem;
+      color: #dbe7ff;
+      font-weight: 600;
+    }
+
+    .label-value {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.86rem;
+    }
+
+    input, select, button {
+      width: 100%;
+      font: inherit;
+      border: none;
+      border-radius: 14px;
+    }
+
+    input, select {
+      padding: 12px 14px;
+      background: rgba(10, 18, 34, 0.9);
+      color: var(--text);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    input[type="range"] {
+      padding: 0;
+      height: 8px;
+      appearance: none;
+      background: linear-gradient(90deg, rgba(110, 231, 255, 0.3), rgba(139, 92, 246, 0.3));
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 0 0 5px rgba(110, 231, 255, 0.18);
+      border: 2px solid var(--accent);
     }
 
     button {
-      border: none;
-      background: #0ea5e9;
+      padding: 13px 14px;
       color: white;
       font-weight: 700;
       cursor: pointer;
-      transition: transform 0.15s ease, opacity 0.15s ease;
+      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
     }
 
     button:hover {
       transform: translateY(-1px);
-      opacity: 0.95;
+      opacity: 0.96;
     }
 
-    button.secondary {
-      background: #64748b;
+    .button-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 14px;
     }
 
-    button.danger {
-      background: #ef4444;
+    .primary { background: linear-gradient(135deg, #06b6d4, #2563eb); }
+    .secondary { background: linear-gradient(135deg, #475569, #334155); }
+    .danger { background: linear-gradient(135deg, #f43f5e, #e11d48); }
+    .ghost { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+
+    .hidden { display: none; }
+
+    .canvas-panel {
+      overflow: hidden;
+    }
+
+    .canvas-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 20px 0;
+    }
+
+    .canvas-header p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
     }
 
     .canvas-wrap {
-      background: #f8fafc;
-      border: 2px solid #dbeafe;
-      border-radius: 14px;
+      margin: 16px 20px 20px;
+      border-radius: 24px;
       overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: linear-gradient(to bottom, rgba(8, 15, 30, 1), rgba(17, 30, 54, 1));
+      position: relative;
     }
 
     canvas {
       display: block;
       width: 100%;
       height: auto;
-      background: linear-gradient(to bottom, #f8fbff, #eef6ff);
+      cursor: crosshair;
     }
 
-    .info-box {
-      margin-top: 16px;
-      padding: 14px;
-      background: #f8fafc;
-      border-radius: 12px;
-      border: 1px solid #e2e8f0;
+    .tip-chip {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(110, 231, 255, 0.24);
+      color: var(--accent);
+      background: rgba(110, 231, 255, 0.08);
+      font-size: 0.86rem;
+      font-weight: 700;
     }
 
-    .info-box p {
-      margin: 8px 0;
-      line-height: 1.45;
-    }
-
-    .stats {
+    .stats-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 16px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
     }
 
     .stat-card {
-      background: #eff6ff;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid #bfdbfe;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: var(--panel-2);
     }
 
     .stat-card span {
       display: block;
-      font-size: 0.82rem;
-      color: #475569;
-      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      margin-bottom: 6px;
     }
 
     .stat-card strong {
-      font-size: 1rem;
+      font-size: 1.02rem;
+      letter-spacing: -0.02em;
     }
 
-    .hidden {
-      display: none;
+    .info-box {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: var(--panel-2);
+      line-height: 1.55;
     }
 
-    @media (max-width: 900px) {
+    .info-box p {
+      margin: 8px 0;
+    }
+
+    .mini-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mini-card {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(10, 18, 34, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .mini-card h4 {
+      margin: 0 0 6px;
+      font-size: 0.95rem;
+    }
+
+    .mini-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .formula {
+      font-family: "Times New Roman", serif;
+      color: #fff7d1;
+      font-size: 1.02rem;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1180px) {
       .layout {
         grid-template-columns: 1fr;
+      }
+      .hero {
+        flex-direction: column;
+      }
+      .button-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .control-grid, .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .button-row {
+        grid-template-columns: 1fr;
+      }
+      .canvas-header {
+        flex-direction: column;
+        align-items: flex-start;
       }
     }
   </style>
 </head>
 <body>
   <div class="app">
-    <h1>Physics Simulator</h1>
-    <p class="subtitle">Easy first version with Projectile Motion and Gravity modes.</p>
+    <section class="hero panel">
+      <div>
+        <h1>Physics Sim: Learning Edition</h1>
+        <p>
+          A visual tool for basic physics students. Explore motion, gravity, energy, springs, collisions,
+          circular motion, and simple black hole orbits by changing values and watching what happens in real time.
+        </p>
+      </div>
+      <div class="hero-badge">Interactive STEM Sandbox</div>
+    </section>
 
     <div class="layout">
-      <div class="panel">
-        <h2>Controls</h2>
+      <aside class="panel">
+        <div class="panel-inner">
+          <h2>Simulation Controls</h2>
 
-        <div class="control-group">
-          <label for="modeSelect">Simulation Mode</label>
-          <select id="modeSelect">
-            <option value="projectile">Projectile Motion</option>
-            <option value="gravity">Gravity Drop + Bounce</option>
-            <option value="blackhole">Black Hole Orbit</option>
-          </select>
-        </div>
-
-        <div id="projectileControls">
           <div class="control-group">
-            <label for="velocityInput">Initial Velocity</label>
-            <input id="velocityInput" type="number" min="1" value="55" />
+            <label for="modeSelect">Mode</label>
+            <select id="modeSelect">
+              <option value="projectile">Projectile Motion</option>
+              <option value="gravity">Gravity Drop + Bounce</option>
+              <option value="blackhole">Black Hole Orbit</option>
+              <option value="freefall">Free Fall Comparison</option>
+              <option value="spring">Hooke's Law Spring</option>
+              <option value="collision">Momentum Collision</option>
+              <option value="circular">Uniform Circular Motion</option>
+            </select>
+          </div>
+
+          <div id="projectileControls">
+            <div class="control-group">
+              <label for="velocityInput">Launch Speed <span class="label-value" id="velocityValue"></span></label>
+              <input id="velocityInput" type="range" min="10" max="120" value="60" />
+            </div>
+            <div class="control-group">
+              <label for="angleInput">Launch Angle <span class="label-value" id="angleValue"></span></label>
+              <input id="angleInput" type="range" min="10" max="80" value="48" />
+            </div>
+          </div>
+
+          <div id="gravityControls" class="hidden">
+            <div class="control-group">
+              <label for="dropHeightInput">Starting Height <span class="label-value" id="dropHeightValue"></span></label>
+              <input id="dropHeightInput" type="range" min="5" max="60" value="45" />
+            </div>
+            <div class="control-group">
+              <label for="bounceInput">Bounce Loss <span class="label-value" id="bounceValue"></span></label>
+              <input id="bounceInput" type="range" min="0.2" max="0.95" step="0.05" value="0.78" />
+            </div>
+            <div class="control-group">
+              <label for="massInput">Mass <span class="label-value" id="massValue"></span></label>
+              <input id="massInput" type="range" min="5" max="40" value="18" />
+            </div>
+          </div>
+
+          <div id="blackHoleControls" class="hidden">
+            <div class="control-group">
+              <label for="pullInput">Pull Strength <span class="label-value" id="pullValue"></span></label>
+              <input id="pullInput" type="range" min="300" max="1800" step="50" value="950" />
+            </div>
+            <div class="control-group">
+              <label for="orbitSpeedInput">Starting Speed <span class="label-value" id="orbitSpeedValue"></span></label>
+              <input id="orbitSpeedInput" type="range" min="20" max="140" step="5" value="88" />
+            </div>
+          </div>
+
+          <div id="freefallControls" class="hidden">
+            <div class="control-group">
+              <label for="freefallHeightInput">Drop Height <span class="label-value" id="freefallHeightValue"></span></label>
+              <input id="freefallHeightInput" type="range" min="10" max="70" value="55" />
+            </div>
+          </div>
+
+          <div id="springControls" class="hidden">
+            <div class="control-group">
+              <label for="springKInput">Spring Stiffness k <span class="label-value" id="springKValue"></span></label>
+              <input id="springKInput" type="range" min="20" max="150" value="70" />
+            </div>
+            <div class="control-group">
+              <label for="springMassInput">Mass <span class="label-value" id="springMassValue"></span></label>
+              <input id="springMassInput" type="range" min="5" max="35" value="16" />
+            </div>
+            <div class="control-group">
+              <label for="stretchInput">Stretch Amount <span class="label-value" id="stretchValue"></span></label>
+              <input id="stretchInput" type="range" min="30" max="180" value="110" />
+            </div>
+          </div>
+
+          <div id="collisionControls" class="hidden">
+            <div class="control-grid">
+              <div class="control-group">
+                <label for="mass1Input">Mass A <span class="label-value" id="mass1Value"></span></label>
+                <input id="mass1Input" type="range" min="5" max="35" value="12" />
+              </div>
+              <div class="control-group">
+                <label for="mass2Input">Mass B <span class="label-value" id="mass2Value"></span></label>
+                <input id="mass2Input" type="range" min="5" max="35" value="22" />
+              </div>
+            </div>
+            <div class="control-grid">
+              <div class="control-group">
+                <label for="vel1Input">Speed A <span class="label-value" id="vel1Value"></span></label>
+                <input id="vel1Input" type="range" min="10" max="100" value="72" />
+              </div>
+              <div class="control-group">
+                <label for="vel2Input">Speed B <span class="label-value" id="vel2Value"></span></label>
+                <input id="vel2Input" type="range" min="0" max="80" value="18" />
+              </div>
+            </div>
+          </div>
+
+          <div id="circularControls" class="hidden">
+            <div class="control-group">
+              <label for="radiusInput">Radius <span class="label-value" id="radiusValue"></span></label>
+              <input id="radiusInput" type="range" min="60" max="180" value="120" />
+            </div>
+            <div class="control-group">
+              <label for="angularSpeedInput">Angular Speed <span class="label-value" id="angularSpeedValue"></span></label>
+              <input id="angularSpeedInput" type="range" min="0.5" max="4" step="0.1" value="1.8" />
+            </div>
           </div>
 
           <div class="control-group">
-            <label for="angleInput">Launch Angle (degrees)</label>
-            <input id="angleInput" type="number" min="1" max="89" value="45" />
-          </div>
-        </div>
-
-        <div id="gravityControls" class="hidden">
-          <div class="control-group">
-            <label for="massInput">Mass</label>
-            <input id="massInput" type="number" min="1" value="20" />
+            <label for="gravityInput">Gravity Strength <span class="label-value" id="gravityValue"></span></label>
+            <input id="gravityInput" type="range" min="1" max="20" step="0.1" value="9.8" />
           </div>
 
-          <div class="control-group">
-            <label for="bounceInput">Bounce Loss (0 to 1)</label>
-            <input id="bounceInput" type="number" min="0.1" max="0.95" step="0.05" value="0.75" />
-          </div>
-        </div>
-
-        <div id="blackHoleControls" class="hidden">
-          <div class="control-group">
-            <label for="pullInput">Black Hole Pull Strength</label>
-            <input id="pullInput" type="number" min="50" value="900" step="50" />
+          <div class="button-row">
+            <button id="playBtn" class="primary">Play</button>
+            <button id="pauseBtn" class="secondary">Pause</button>
+            <button id="resetBtn" class="danger">Reset</button>
+            <button id="stepBtn" class="ghost">Step</button>
           </div>
 
-          <div class="control-group">
-            <label for="orbitSpeedInput">Starting Orbit Speed</label>
-            <input id="orbitSpeedInput" type="number" min="10" value="85" step="5" />
+          <div class="info-box">
+            <p><strong>Concept:</strong> <span id="conceptText">Projectile motion shows how forward motion and gravity work at the same time.</span></p>
+            <p><strong>Formula:</strong> <span id="formulaText" class="formula">x = v₀cos(θ)t, y = v₀sin(θ)t - 1/2gt²</span></p>
+            <p><strong>Student Tip:</strong> <span id="tipText">Notice how the horizontal movement stays steady while gravity changes the vertical motion.</span></p>
           </div>
-        </div>
 
-        <div class="control-group">
-          <label for="gravityInput">Gravity Strength</label>
-          <input id="gravityInput" type="number" min="1" value="9.8" step="0.1" />
+          <p class="footer-note">
+            Tip: use Play to watch the full motion, or use Step to move frame by frame like a classroom demo.
+          </p>
         </div>
+      </aside>
 
-        <div class="button-row">
-          <button id="playBtn">Play</button>
-          <button id="pauseBtn" class="secondary">Pause</button>
-          <button id="resetBtn" class="danger">Reset</button>
+      <main class="panel canvas-panel">
+        <div class="canvas-header">
+          <div>
+            <h2 style="margin:0;">Live Simulation View</h2>
+            <p id="canvasSubtitle">Interactive visual model for basic physics concepts</p>
+          </div>
+          <div class="tip-chip" id="modeChip">Projectile Motion</div>
         </div>
-
-        <div class="info-box">
-          <p><strong>Concept:</strong> <span id="conceptText">Projectile motion shows how an object moves forward while gravity pulls it down.</span></p>
-          <p><strong>Formula:</strong> <span id="formulaText">x = v₀ cos(θ)t, y = v₀ sin(θ)t - 1/2gt²</span></p>
-          <p><strong>Variables:</strong> <span id="variablesText">v₀ = initial velocity, θ = launch angle, g = gravity, t = time</span></p>
-        </div>
-      </div>
-
-      <div class="canvas-panel">
-        <h2>Simulation</h2>
         <div class="canvas-wrap">
-          <canvas id="simCanvas" width="700" height="450"></canvas>
+          <canvas id="simCanvas" width="820" height="520"></canvas>
         </div>
+      </main>
 
-        <div class="stats">
-          <div class="stat-card">
-            <span>Time</span>
-            <strong id="timeStat">0.00 s</strong>
+      <aside class="panel">
+        <div class="panel-inner">
+          <h2>Live Data</h2>
+          <div class="stats-grid">
+            <div class="stat-card"><span>Time</span><strong id="timeStat">0.00 s</strong></div>
+            <div class="stat-card"><span>Height</span><strong id="heightStat">0.00 m</strong></div>
+            <div class="stat-card"><span>Speed</span><strong id="speedStat">0.00 m/s</strong></div>
+            <div class="stat-card"><span>Direction</span><strong id="directionStat">At Rest</strong></div>
+            <div class="stat-card"><span>Energy / Force</span><strong id="energyStat">--</strong></div>
+            <div class="stat-card"><span>Extra Info</span><strong id="extraStat">--</strong></div>
           </div>
-          <div class="stat-card">
-            <span>X Position</span>
-            <strong id="xStat">0.00</strong>
-          </div>
-          <div class="stat-card">
-            <span>Y Position</span>
-            <strong id="yStat">0.00</strong>
-          </div>
-          <div class="stat-card">
-            <span>Height Above Ground</span>
-            <strong id="heightStat">0.00 m</strong>
-          </div>
-          <div class="stat-card">
-            <span>Vertical Speed</span>
-            <strong id="verticalSpeedStat">0.00 m/s</strong>
-          </div>
-          <div class="stat-card">
-            <span>Direction</span>
-            <strong id="directionStat">At Rest</strong>
+
+          <div class="info-box">
+            <h3>What to Notice</h3>
+            <div class="mini-list" id="learningCards"></div>
           </div>
         </div>
-      </div>
+      </aside>
     </div>
-  </div>
   </div>
 
   <script>
@@ -282,37 +524,81 @@
     const ctx = canvas.getContext('2d');
 
     const modeSelect = document.getElementById('modeSelect');
-    const velocityInput = document.getElementById('velocityInput');
-    const angleInput = document.getElementById('angleInput');
-    const massInput = document.getElementById('massInput');
-    const bounceInput = document.getElementById('bounceInput');
-    const gravityInput = document.getElementById('gravityInput');
-    const pullInput = document.getElementById('pullInput');
-    const orbitSpeedInput = document.getElementById('orbitSpeedInput');
-
-    const projectileControls = document.getElementById('projectileControls');
-    const gravityControls = document.getElementById('gravityControls');
-    const blackHoleControls = document.getElementById('blackHoleControls');
-
-    const conceptText = document.getElementById('conceptText');
-    const formulaText = document.getElementById('formulaText');
-    const variablesText = document.getElementById('variablesText');
-
-    const timeStat = document.getElementById('timeStat');
-    const xStat = document.getElementById('xStat');
-    const yStat = document.getElementById('yStat');
-    const heightStat = document.getElementById('heightStat');
-    const verticalSpeedStat = document.getElementById('verticalSpeedStat');
-    const directionStat = document.getElementById('directionStat');
-
     const playBtn = document.getElementById('playBtn');
     const pauseBtn = document.getElementById('pauseBtn');
     const resetBtn = document.getElementById('resetBtn');
+    const stepBtn = document.getElementById('stepBtn');
+
+    const conceptText = document.getElementById('conceptText');
+    const formulaText = document.getElementById('formulaText');
+    const tipText = document.getElementById('tipText');
+    const canvasSubtitle = document.getElementById('canvasSubtitle');
+    const modeChip = document.getElementById('modeChip');
+    const learningCards = document.getElementById('learningCards');
+
+    const timeStat = document.getElementById('timeStat');
+    const heightStat = document.getElementById('heightStat');
+    const speedStat = document.getElementById('speedStat');
+    const directionStat = document.getElementById('directionStat');
+    const energyStat = document.getElementById('energyStat');
+    const extraStat = document.getElementById('extraStat');
+
+    const controls = {
+      projectile: document.getElementById('projectileControls'),
+      gravity: document.getElementById('gravityControls'),
+      blackhole: document.getElementById('blackHoleControls'),
+      freefall: document.getElementById('freefallControls'),
+      spring: document.getElementById('springControls'),
+      collision: document.getElementById('collisionControls'),
+      circular: document.getElementById('circularControls')
+    };
+
+    const inputs = {
+      velocity: document.getElementById('velocityInput'),
+      angle: document.getElementById('angleInput'),
+      gravity: document.getElementById('gravityInput'),
+      dropHeight: document.getElementById('dropHeightInput'),
+      bounce: document.getElementById('bounceInput'),
+      mass: document.getElementById('massInput'),
+      pull: document.getElementById('pullInput'),
+      orbitSpeed: document.getElementById('orbitSpeedInput'),
+      freefallHeight: document.getElementById('freefallHeightInput'),
+      springK: document.getElementById('springKInput'),
+      springMass: document.getElementById('springMassInput'),
+      stretch: document.getElementById('stretchInput'),
+      mass1: document.getElementById('mass1Input'),
+      mass2: document.getElementById('mass2Input'),
+      vel1: document.getElementById('vel1Input'),
+      vel2: document.getElementById('vel2Input'),
+      radius: document.getElementById('radiusInput'),
+      angularSpeed: document.getElementById('angularSpeedInput')
+    };
+
+    const valueLabels = {
+      velocity: document.getElementById('velocityValue'),
+      angle: document.getElementById('angleValue'),
+      gravity: document.getElementById('gravityValue'),
+      dropHeight: document.getElementById('dropHeightValue'),
+      bounce: document.getElementById('bounceValue'),
+      mass: document.getElementById('massValue'),
+      pull: document.getElementById('pullValue'),
+      orbitSpeed: document.getElementById('orbitSpeedValue'),
+      freefallHeight: document.getElementById('freefallHeightValue'),
+      springK: document.getElementById('springKValue'),
+      springMass: document.getElementById('springMassValue'),
+      stretch: document.getElementById('stretchValue'),
+      mass1: document.getElementById('mass1Value'),
+      mass2: document.getElementById('mass2Value'),
+      vel1: document.getElementById('vel1Value'),
+      vel2: document.getElementById('vel2Value'),
+      radius: document.getElementById('radiusValue'),
+      angularSpeed: document.getElementById('angularSpeedValue')
+    };
 
     const WORLD = {
       width: canvas.width,
       height: canvas.height,
-      floorY: canvas.height - 40,
+      floorY: canvas.height - 56,
       scale: 5
     };
 
@@ -321,284 +607,394 @@
     let lastTimestamp = 0;
     let simTime = 0;
     let trail = [];
-    let object = {};
+    let state = {};
 
     function toRadians(deg) {
       return deg * Math.PI / 180;
     }
 
+    function formatValue(key, val) {
+      const v = Number(val);
+      const map = {
+        velocity: `${v} m/s`,
+        angle: `${v}°`,
+        gravity: `${v.toFixed(1)} m/s²`,
+        dropHeight: `${v} m`,
+        bounce: v.toFixed(2),
+        mass: `${v} kg`,
+        pull: v.toFixed(0),
+        orbitSpeed: `${v} m/s`,
+        freefallHeight: `${v} m`,
+        springK: `${v} N/m`,
+        springMass: `${v} kg`,
+        stretch: `${v} px`,
+        mass1: `${v} kg`,
+        mass2: `${v} kg`,
+        vel1: `${v} m/s`,
+        vel2: `${v} m/s`,
+        radius: `${v} px`,
+        angularSpeed: `${v.toFixed(1)} rad/s`
+      };
+      return map[key] || String(v);
+    }
+
+    function syncValueLabels() {
+      Object.entries(inputs).forEach(([key, input]) => {
+        if (valueLabels[key]) valueLabels[key].textContent = formatValue(key, input.value);
+      });
+    }
+
+    function getGravityPx() {
+      return Number(inputs.gravity.value) * WORLD.scale;
+    }
+
+    function resetTrail(limit = 220) {
+      trail = [];
+      trail.limit = limit;
+    }
+
+    function setLearningCards(items) {
+      learningCards.innerHTML = items.map(item => `
+        <div class="mini-card">
+          <h4>${item.title}</h4>
+          <p>${item.text}</p>
+        </div>
+      `).join('');
+    }
+
     function updateModeUI() {
       currentMode = modeSelect.value;
+      Object.entries(controls).forEach(([key, el]) => {
+        el.classList.toggle('hidden', key !== currentMode);
+      });
 
-      if (currentMode === 'projectile') {
-        projectileControls.classList.remove('hidden');
-        gravityControls.classList.add('hidden');
-        blackHoleControls.classList.add('hidden');
-        conceptText.textContent = 'Projectile motion shows how an object moves forward while gravity pulls it down.';
-        formulaText.textContent = 'x = v₀ cos(θ)t, y = v₀ sin(θ)t - 1/2gt²';
-        variablesText.textContent = 'v₀ = initial velocity, θ = launch angle, g = gravity, t = time';
-      } else if (currentMode === 'gravity') {
-        projectileControls.classList.add('hidden');
-        gravityControls.classList.remove('hidden');
-        blackHoleControls.classList.add('hidden');
-        conceptText.textContent = 'Gravity makes an object fall downward, and a bounce shows energy loss during collision. The height and vertical speed help students see the motion in meters.';
-        formulaText.textContent = 'v = v + gt and bounce velocity = -v × loss';
-        variablesText.textContent = 'g = gravity, v = velocity, loss = bounce reduction factor';
-      } else {
-        projectileControls.classList.add('hidden');
-        gravityControls.classList.add('hidden');
-        blackHoleControls.classList.remove('hidden');
-        conceptText.textContent = 'A black hole pulls objects inward. If the object has sideways speed, it can curve into an orbit-like path.';
-        formulaText.textContent = 'F ∝ 1/r² and acceleration points toward the black hole';
-        variablesText.textContent = 'r = distance from center, F = pull force, velocity controls the curve of motion';
-      }
+      const modeConfig = {
+        projectile: {
+          chip: 'Projectile Motion',
+          subtitle: 'Watch horizontal and vertical motion happen together',
+          concept: 'Projectile motion combines forward velocity with downward acceleration from gravity.',
+          formula: 'x = v₀cos(θ)t, y = v₀sin(θ)t - 1/2gt²',
+          tip: 'The x motion stays steady, but the y motion changes because gravity keeps pulling down.',
+          cards: [
+            { title: 'Horizontal Motion', text: 'The projectile keeps moving sideways at a steady rate in this simple model.' },
+            { title: 'Vertical Motion', text: 'Gravity slows the object on the way up, stops it at the top, then speeds it up downward.' }
+          ]
+        },
+        gravity: {
+          chip: 'Gravity Drop + Bounce',
+          subtitle: 'See height, direction, and energy change during each bounce',
+          concept: 'A falling object speeds up downward, then loses some energy every time it bounces back up.',
+          formula: 'v = v + gt,  bounce speed = previous speed × loss factor',
+          tip: 'Each bounce is lower because some energy is lost during impact with the ground.',
+          cards: [
+            { title: 'Upward vs Downward', text: 'Watch the direction label change as the object goes up and down.' },
+            { title: 'Energy Loss', text: 'Smaller bounce heights show that the collision is not perfectly elastic.' }
+          ]
+        },
+        blackhole: {
+          chip: 'Black Hole Orbit',
+          subtitle: 'Explore gravity-like pull and curved paths',
+          concept: 'A strong central pull bends the path of a moving object and can create an orbit-like motion.',
+          formula: 'Force points inward and gets stronger at smaller distances',
+          tip: 'Try changing the starting speed. Too slow falls inward, but a better balance curves around the center.',
+          cards: [
+            { title: 'Curved Motion', text: 'The inward pull keeps changing the direction of velocity, which bends the path.' },
+            { title: 'Orbit Balance', text: 'A stronger sideways speed can keep the object circling instead of falling straight in.' }
+          ]
+        },
+        freefall: {
+          chip: 'Free Fall Comparison',
+          subtitle: 'Compare two objects dropping from the same height',
+          concept: 'In simple free fall with no air resistance, different masses fall at the same rate.',
+          formula: 'y = 1/2gt²,  v = gt',
+          tip: 'Even though the objects look different, they should hit the ground at the same time in this model.',
+          cards: [
+            { title: 'Mass Independence', text: 'Free-fall acceleration stays the same for both objects in this simplified version.' },
+            { title: 'Visual Proof', text: 'This helps students see that gravity affects both equally when air resistance is ignored.' }
+          ]
+        },
+        spring: {
+          chip: 'Hooke\'s Law Spring',
+          subtitle: 'Stretch the spring and watch the restoring force pull it back',
+          concept: 'A spring pushes or pulls back toward equilibrium. Bigger stretch means bigger restoring force.',
+          formula: 'F = -kx',
+          tip: 'A stiffer spring or lighter mass changes how quickly the system oscillates.',
+          cards: [
+            { title: 'Restoring Force', text: 'The spring always tries to pull the mass back to its equilibrium position.' },
+            { title: 'Oscillation', text: 'The system moves back and forth because velocity and restoring force keep trading roles.' }
+          ]
+        },
+        collision: {
+          chip: 'Momentum Collision',
+          subtitle: 'See how mass and speed affect a 1D collision',
+          concept: 'Momentum depends on both mass and velocity, so heavier or faster objects change the collision result.',
+          formula: 'p = mv',
+          tip: 'Try a light fast object hitting a heavy slow one and compare what happens after contact.',
+          cards: [
+            { title: 'Momentum', text: 'Mass and speed both matter. Bigger momentum usually causes a bigger change in the collision.' },
+            { title: 'Transfer', text: 'This mode helps show how motion can move from one object to another during impact.' }
+          ]
+        },
+        circular: {
+          chip: 'Uniform Circular Motion',
+          subtitle: 'Visualize orbit-like motion at a constant radius',
+          concept: 'Circular motion needs inward acceleration even when speed stays constant.',
+          formula: 'aᶜ = v²/r',
+          tip: 'A tighter radius or faster motion means stronger inward acceleration is needed.',
+          cards: [
+            { title: 'Centripetal Acceleration', text: 'The object keeps changing direction, which means it is accelerating inward the whole time.' },
+            { title: 'Radius vs Speed', text: 'If speed rises or radius shrinks, the inward acceleration needed becomes bigger.' }
+          ]
+        }
+      };
 
+      const config = modeConfig[currentMode];
+      modeChip.textContent = config.chip;
+      canvasSubtitle.textContent = config.subtitle;
+      conceptText.textContent = config.concept;
+      formulaText.textContent = config.formula;
+      tipText.textContent = config.tip;
+      setLearningCards(config.cards);
       resetSimulation();
     }
 
     function createProjectileState() {
-      const velocity = Number(velocityInput.value) || 55;
-      const angle = toRadians(Number(angleInput.value) || 45);
-
-      object = {
-        x: 60,
-        y: WORLD.floorY,
-        radius: 14,
-        vx: velocity * Math.cos(angle),
-        vy: -(velocity * Math.sin(angle)),
-        color: '#0ea5e9'
+      const v = Number(inputs.velocity.value);
+      const angle = toRadians(Number(inputs.angle.value));
+      state = {
+        ball: {
+          x: 70,
+          y: WORLD.floorY,
+          vx: v * Math.cos(angle),
+          vy: -v * Math.sin(angle),
+          r: 14,
+          color: '#6ee7ff'
+        }
       };
+      resetTrail(260);
     }
 
     function createGravityState() {
-      const mass = Number(massInput.value) || 20;
-      object = {
-        x: WORLD.width / 2,
-        y: 70,
-        radius: Math.max(10, Math.min(24, mass / 1.5)),
-        vx: 0,
-        vy: 0,
-        mass,
-        color: '#8b5cf6'
+      const mass = Number(inputs.mass.value);
+      const dropHeightMeters = Number(inputs.dropHeight.value);
+      state = {
+        ball: {
+          x: WORLD.width / 2,
+          y: WORLD.floorY - dropHeightMeters * WORLD.scale,
+          vx: 0,
+          vy: 0,
+          mass,
+          r: Math.max(12, Math.min(24, mass / 1.5)),
+          color: '#a78bfa'
+        },
+        lastPeak: dropHeightMeters
       };
+      resetTrail(220);
     }
 
     function createBlackHoleState() {
-      const orbitSpeed = Number(orbitSpeedInput.value) || 85;
-      object = {
-        x: WORLD.width / 2 + 170,
-        y: WORLD.height / 2 - 40,
-        radius: 11,
-        vx: 0,
-        vy: -orbitSpeed,
-        color: '#f97316'
+      state = {
+        center: { x: WORLD.width / 2, y: WORLD.height / 2 },
+        ball: {
+          x: WORLD.width / 2 + 180,
+          y: WORLD.height / 2 - 30,
+          vx: 0,
+          vy: -Number(inputs.orbitSpeed.value),
+          r: 11,
+          color: '#fb923c'
+        }
       };
-    };
-    
+      resetTrail(320);
+    }
+
+    function createFreeFallState() {
+      const h = Number(inputs.freefallHeight.value);
+      state = {
+        balls: [
+          { x: WORLD.width / 2 - 80, y: WORLD.floorY - h * WORLD.scale, vy: 0, r: 14, mass: 10, color: '#6ee7ff' },
+          { x: WORLD.width / 2 + 80, y: WORLD.floorY - h * WORLD.scale, vy: 0, r: 24, mass: 26, color: '#fbbf24' }
+        ]
+      };
+      resetTrail(120);
+    }
+
+    function createSpringState() {
+      const stretch = Number(inputs.stretch.value);
+      state = {
+        anchorX: 120,
+        equilibriumX: 280,
+        mass: Number(inputs.springMass.value),
+        k: Number(inputs.springK.value),
+        block: {
+          x: 280 + stretch,
+          y: WORLD.height / 2,
+          vx: 0,
+          r: 26,
+          color: '#22c55e'
+        }
+      };
+      resetTrail(260);
+    }
+
+    function createCollisionState() {
+      const m1 = Number(inputs.mass1.value);
+      const m2 = Number(inputs.mass2.value);
+      state = {
+        collided: false,
+        a: { x: 150, y: WORLD.floorY, vx: Number(inputs.vel1.value), r: Math.max(14, m1 / 1.2), mass: m1, color: '#6ee7ff' },
+        b: { x: WORLD.width - 180, y: WORLD.floorY, vx: -Number(inputs.vel2.value), r: Math.max(14, m2 / 1.2), mass: m2, color: '#f472b6' }
+      };
+      resetTrail(100);
+    }
+
+    function createCircularState() {
+      state = {
+        center: { x: WORLD.width / 2, y: WORLD.height / 2 },
+        radius: Number(inputs.radius.value),
+        angular: Number(inputs.angularSpeed.value),
+        theta: -Math.PI / 2,
+        ball: { r: 12, color: '#fbbf24' }
+      };
+      resetTrail(240);
+    }
 
     function resetSimulation() {
       running = false;
-      simTime = 0;
       lastTimestamp = 0;
-      trail = [];
+      simTime = 0;
 
-      if (currentMode === 'projectile') {
-        createProjectileState();
-      } else if (currentMode === 'gravity') {
-        createGravityState();
-      } else {
-        createBlackHoleState();
-      }
+      if (currentMode === 'projectile') createProjectileState();
+      if (currentMode === 'gravity') createGravityState();
+      if (currentMode === 'blackhole') createBlackHoleState();
+      if (currentMode === 'freefall') createFreeFallState();
+      if (currentMode === 'spring') createSpringState();
+      if (currentMode === 'collision') createCollisionState();
+      if (currentMode === 'circular') createCircularState();
 
       updateStats();
       draw();
     }
 
-    function updateStats() {
-      const displayHeight = Math.max(0, (WORLD.floorY - object.y) / WORLD.scale);
-      const displayVerticalSpeed = Math.abs(object.vy / WORLD.scale);
-
-      timeStat.textContent = simTime.toFixed(2) + ' s';
-      xStat.textContent = object.x.toFixed(2);
-      yStat.textContent = (WORLD.floorY - object.y).toFixed(2);
-      heightStat.textContent = displayHeight.toFixed(2) + ' m';
-      verticalSpeedStat.textContent = displayVerticalSpeed.toFixed(2) + ' m/s';
-
-      if (currentMode === 'gravity') {
-        if (Math.abs(object.vy) < 0.1) {
-          directionStat.textContent = 'At Rest';
-        } else if (object.vy < 0) {
-          directionStat.textContent = 'Upward';
-        } else {
-          directionStat.textContent = 'Downward';
-        }
-      } else if (currentMode === 'projectile') {
-        directionStat.textContent = object.vy < 0 ? 'Upward' : 'Downward';
-      } else {
-        directionStat.textContent = 'Orbiting';
-      }
-    }
-
-    function drawBackground() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      ctx.strokeStyle = '#cbd5e1';
-      ctx.lineWidth = 1;
-
-      for (let x = 0; x <= canvas.width; x += 50) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-      }
-
-      for (let y = 0; y <= canvas.height; y += 50) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-      }
-
-      ctx.strokeStyle = '#334155';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(0, WORLD.floorY + object.radius);
-      ctx.lineTo(canvas.width, WORLD.floorY + object.radius);
-      ctx.stroke();
-    }
-
-    function drawTrail() {
-      if (trail.length < 2) return;
-
-      ctx.beginPath();
-      ctx.moveTo(trail[0].x, trail[0].y);
-      for (let i = 1; i < trail.length; i++) {
-        ctx.lineTo(trail[i].x, trail[i].y);
-      }
-      ctx.strokeStyle = 'rgba(14, 165, 233, 0.5)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
-    function drawObject() {
-      ctx.beginPath();
-      ctx.arc(object.x, object.y, object.radius, 0, Math.PI * 2);
-      ctx.fillStyle = object.color;
-      ctx.fill();
-      ctx.strokeStyle = '#0f172a';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
-    function drawLabels() {
-      ctx.fillStyle = '#0f172a';
-      ctx.font = '16px Arial';
-      const modeLabel = currentMode === 'projectile'
-        ? 'Projectile Motion'
-        : currentMode === 'gravity'
-          ? 'Gravity Drop + Bounce'
-          : 'Black Hole Orbit';
-      ctx.fillText(`Mode: ${modeLabel}`, 16, 28);
-
-      if (currentMode === 'gravity') {
-        const meters = Math.max(0, (WORLD.floorY - object.y) / WORLD.scale).toFixed(2);
-        const direction = Math.abs(object.vy) < 0.1 ? 'At Rest' : object.vy < 0 ? 'Upward' : 'Downward';
-        ctx.fillText(`Height: ${meters} m`, 16, 52);
-        ctx.fillText(`Bounce Direction: ${direction}`, 16, 76);
-      }
-    }
-
-    function drawBlackHoleCenter() {
-      if (currentMode !== 'blackhole') return;
-
-      const centerX = WORLD.width / 2;
-      const centerY = WORLD.height / 2;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 24, 0, Math.PI * 2);
-      ctx.fillStyle = '#111827';
-      ctx.fill();
-      ctx.strokeStyle = '#fbbf24';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 42, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
-      ctx.lineWidth = 5;
-      ctx.stroke();
-    }
-
-    function draw() {
-      drawBackground();
-      drawBlackHoleCenter();
-      drawTrail();
-      drawObject();
-      drawLabels();
+    function pushTrail(x, y) {
+      trail.push({ x, y });
+      if (trail.length > trail.limit) trail.shift();
     }
 
     function updateProjectile(dt) {
-      const g = (Number(gravityInput.value) || 9.8) * WORLD.scale;
+      const g = getGravityPx();
+      const ball = state.ball;
+      ball.vy += g * dt;
+      ball.x += ball.vx * dt;
+      ball.y += ball.vy * dt;
+      pushTrail(ball.x, ball.y);
 
-      object.vy += g * dt;
-      object.x += object.vx * dt;
-      object.y += object.vy * dt;
-
-      trail.push({ x: object.x, y: object.y });
-      if (trail.length > 200) trail.shift();
-
-      if (object.y >= WORLD.floorY) {
-        object.y = WORLD.floorY;
+      if (ball.y >= WORLD.floorY) {
+        ball.y = WORLD.floorY;
         running = false;
       }
-
-      if (object.x > WORLD.width + object.radius) {
-        running = false;
-      }
+      if (ball.x > WORLD.width + 40) running = false;
     }
 
     function updateGravity(dt) {
-      const g = (Number(gravityInput.value) || 9.8) * WORLD.scale;
-      const bounceLoss = Number(bounceInput.value) || 0.75;
+      const g = getGravityPx();
+      const loss = Number(inputs.bounce.value);
+      const ball = state.ball;
+      ball.vy += g * dt;
+      ball.y += ball.vy * dt;
+      pushTrail(ball.x, ball.y);
 
-      object.vy += g * dt;
-      object.y += object.vy * dt;
-
-      trail.push({ x: object.x, y: object.y });
-      if (trail.length > 150) trail.shift();
-
-      if (object.y >= WORLD.floorY) {
-        object.y = WORLD.floorY;
-        object.vy = -object.vy * bounceLoss;
-
-        if (Math.abs(object.vy) < 20) {
-          object.vy = 0;
+      if (ball.y >= WORLD.floorY) {
+        ball.y = WORLD.floorY;
+        ball.vy = -ball.vy * loss;
+        state.lastPeak = Math.max(0, (WORLD.floorY - ball.y) / WORLD.scale);
+        if (Math.abs(ball.vy) < 18) {
+          ball.vy = 0;
           running = false;
         }
       }
     }
 
     function updateBlackHole(dt) {
-      const pullStrength = Number(pullInput.value) || 900;
-      const centerX = WORLD.width / 2;
-      const centerY = WORLD.height / 2;
-      const dx = centerX - object.x;
-      const dy = centerY - object.y;
-      const distanceSq = Math.max(dx * dx + dy * dy, 1600);
-      const distance = Math.sqrt(distanceSq);
-      const ax = (pullStrength * dx) / distanceSq;
-      const ay = (pullStrength * dy) / distanceSq;
+      const pull = Number(inputs.pull.value);
+      const { center, ball } = state;
+      const dx = center.x - ball.x;
+      const dy = center.y - ball.y;
+      const distSq = Math.max(dx * dx + dy * dy, 1600);
+      const dist = Math.sqrt(distSq);
+      const ax = (pull * dx) / distSq;
+      const ay = (pull * dy) / distSq;
+      ball.vx += ax * dt;
+      ball.vy += ay * dt;
+      ball.x += ball.vx * dt;
+      ball.y += ball.vy * dt;
+      pushTrail(ball.x, ball.y);
+      if (dist < 26) running = false;
+    }
 
-      object.vx += ax * dt;
-      object.vy += ay * dt;
-      object.x += object.vx * dt;
-      object.y += object.vy * dt;
+    function updateFreeFall(dt) {
+      const g = getGravityPx();
+      state.balls.forEach(ball => {
+        if (ball.y < WORLD.floorY) {
+          ball.vy += g * dt;
+          ball.y += ball.vy * dt;
+          if (ball.y > WORLD.floorY) ball.y = WORLD.floorY;
+        }
+      });
+      const avgX = (state.balls[0].x + state.balls[1].x) / 2;
+      const avgY = (state.balls[0].y + state.balls[1].y) / 2;
+      pushTrail(avgX, avgY);
+      if (state.balls.every(ball => ball.y >= WORLD.floorY)) running = false;
+    }
 
-      trail.push({ x: object.x, y: object.y });
-      if (trail.length > 260) trail.shift();
+    function updateSpring(dt) {
+      const block = state.block;
+      const x = block.x - state.equilibriumX;
+      const accel = -(state.k / state.mass) * x;
+      block.vx += accel * dt * 12;
+      block.vx *= 0.996;
+      block.x += block.vx * dt * 60;
+      pushTrail(block.x, block.y);
+      if (Math.abs(block.vx) < 0.02 && Math.abs(x) < 0.4 && simTime > 0.8) running = false;
+    }
 
-      if (distance < 26) {
-        running = false;
+    function updateCollision(dt) {
+      const a = state.a;
+      const b = state.b;
+      a.x += a.vx * dt;
+      b.x += b.vx * dt;
+
+      if (!state.collided && a.x + a.r >= b.x - b.r) {
+        const newV1 = ((a.mass - b.mass) / (a.mass + b.mass)) * a.vx + ((2 * b.mass) / (a.mass + b.mass)) * b.vx;
+        const newV2 = ((2 * a.mass) / (a.mass + b.mass)) * a.vx + ((b.mass - a.mass) / (a.mass + b.mass)) * b.vx;
+        a.vx = newV1;
+        b.vx = newV2;
+        state.collided = true;
       }
+
+      if (a.x < -100 || b.x > WORLD.width + 100) running = false;
+    }
+
+    function updateCircular(dt) {
+      state.theta += state.angular * dt;
+      const { center, radius } = state;
+      const x = center.x + radius * Math.cos(state.theta);
+      const y = center.y + radius * Math.sin(state.theta);
+      state.ball.x = x;
+      state.ball.y = y;
+      pushTrail(x, y);
+    }
+
+    function stepSimulation(dt) {
+      simTime += dt;
+      if (currentMode === 'projectile') updateProjectile(dt);
+      if (currentMode === 'gravity') updateGravity(dt);
+      if (currentMode === 'blackhole') updateBlackHole(dt);
+      if (currentMode === 'freefall') updateFreeFall(dt);
+      if (currentMode === 'spring') updateSpring(dt);
+      if (currentMode === 'collision') updateCollision(dt);
+      if (currentMode === 'circular') updateCircular(dt);
+      updateStats();
+      draw();
     }
 
     function animate(timestamp) {
@@ -606,23 +1002,280 @@
         lastTimestamp = timestamp;
         return;
       }
-
       if (!lastTimestamp) lastTimestamp = timestamp;
       const dt = Math.min((timestamp - lastTimestamp) / 1000, 0.03);
       lastTimestamp = timestamp;
-      simTime += dt;
+      stepSimulation(dt);
+      requestAnimationFrame(animate);
+    }
 
-      if (currentMode === 'projectile') {
-        updateProjectile(dt);
-      } else if (currentMode === 'gravity') {
-        updateGravity(dt);
-      } else {
-        updateBlackHole(dt);
+    function drawBackground() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#09111f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let x = 0; x < canvas.width; x += 50) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += 50) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
       }
 
-      updateStats();
-      draw();
-      requestAnimationFrame(animate);
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(0, WORLD.floorY + 14);
+      ctx.lineTo(canvas.width, WORLD.floorY + 14);
+      ctx.stroke();
+    }
+
+    function drawTrail(color = 'rgba(110, 231, 255, 0.65)') {
+      if (trail.length < 2) return;
+      ctx.beginPath();
+      ctx.moveTo(trail[0].x, trail[0].y);
+      for (let i = 1; i < trail.length; i++) ctx.lineTo(trail[i].x, trail[i].y);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+    }
+
+    function drawBall(ball) {
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+      ctx.fillStyle = ball.color;
+      ctx.shadowBlur = 22;
+      ctx.shadowColor = ball.color;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    function drawProjectile() {
+      drawTrail('rgba(110,231,255,0.7)');
+      drawBall(state.ball);
+    }
+
+    function drawGravity() {
+      drawTrail('rgba(167,139,250,0.65)');
+      drawBall(state.ball);
+    }
+
+    function drawBlackHole() {
+      const { center } = state;
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, 28, 0, Math.PI * 2);
+      ctx.fillStyle = '#020617';
+      ctx.shadowBlur = 28;
+      ctx.shadowColor = '#f97316';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(251,191,36,0.7)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, 52, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251,191,36,0.25)';
+      ctx.lineWidth = 6;
+      ctx.stroke();
+
+      drawTrail('rgba(249,115,22,0.65)');
+      drawBall(state.ball);
+    }
+
+    function drawFreeFall() {
+      state.balls.forEach(drawBall);
+    }
+
+    function drawSpring() {
+      const block = state.block;
+      ctx.strokeStyle = 'rgba(229,238,252,0.95)';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(state.anchorX, block.y);
+      const coils = 11;
+      const coilLength = (block.x - state.anchorX - block.r) / coils;
+      for (let i = 0; i < coils; i++) {
+        const x = state.anchorX + i * coilLength;
+        const y = block.y + (i % 2 === 0 ? -22 : 22);
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(block.x - block.r, block.y);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.fillRect(state.anchorX - 18, block.y - 50, 18, 100);
+
+      drawTrail('rgba(34,197,94,0.6)');
+      ctx.fillStyle = state.block.color;
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = state.block.color;
+      ctx.fillRect(block.x - block.r, block.y - block.r, block.r * 2, block.r * 2);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.strokeRect(block.x - block.r, block.y - block.r, block.r * 2, block.r * 2);
+    }
+
+    function drawCollision() {
+      drawBall(state.a);
+      drawBall(state.b);
+    }
+
+    function drawCircular() {
+      const { center, radius, ball } = state;
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251,191,36,0.28)';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+
+      drawTrail('rgba(251,191,36,0.55)');
+      drawBall(ball);
+    }
+
+    function drawHUD() {
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      ctx.font = '600 17px Inter, Arial';
+      ctx.fillText(modeChip.textContent, 18, 30);
+      ctx.font = '14px Inter, Arial';
+      ctx.fillStyle = 'rgba(229,238,252,0.72)';
+      ctx.fillText('Interactive learning view', 18, 52);
+    }
+
+    function draw() {
+      drawBackground();
+      if (currentMode === 'projectile') drawProjectile();
+      if (currentMode === 'gravity') drawGravity();
+      if (currentMode === 'blackhole') drawBlackHole();
+      if (currentMode === 'freefall') drawFreeFall();
+      if (currentMode === 'spring') drawSpring();
+      if (currentMode === 'collision') drawCollision();
+      if (currentMode === 'circular') drawCircular();
+      drawHUD();
+    }
+
+    function setStats({ height = 0, speed = 0, direction = 'At Rest', energy = '--', extra = '--' }) {
+      timeStat.textContent = `${simTime.toFixed(2)} s`;
+      heightStat.textContent = typeof height === 'number' ? `${Math.max(0, height).toFixed(2)} m` : height;
+      speedStat.textContent = typeof speed === 'number' ? `${Math.abs(speed).toFixed(2)} m/s` : speed;
+      directionStat.textContent = direction;
+      energyStat.textContent = energy;
+      extraStat.textContent = extra;
+    }
+
+    function updateStats() {
+      if (currentMode === 'projectile') {
+        const b = state.ball;
+        const height = (WORLD.floorY - b.y) / WORLD.scale;
+        const speed = Math.hypot(b.vx, b.vy) / WORLD.scale;
+        const pe = Math.max(0, Number(inputs.gravity.value) * height).toFixed(1);
+        setStats({
+          height,
+          speed,
+          direction: b.vy < 0 ? 'Upward' : 'Downward',
+          energy: `PE ${pe}`,
+          extra: `x speed ${(b.vx / WORLD.scale).toFixed(1)} m/s`
+        });
+      }
+
+      if (currentMode === 'gravity') {
+        const b = state.ball;
+        const height = (WORLD.floorY - b.y) / WORLD.scale;
+        const speed = Math.abs(b.vy) / WORLD.scale;
+        const pe = (Number(inputs.mass.value) * Number(inputs.gravity.value) * Math.max(height, 0)).toFixed(1);
+        const direction = Math.abs(b.vy) < 0.1 ? 'At Rest' : b.vy < 0 ? 'Upward' : 'Downward';
+        setStats({
+          height,
+          speed,
+          direction,
+          energy: `PE ${pe} J`,
+          extra: `Bounce ${(Number(inputs.bounce.value) * 100).toFixed(0)}%`
+        });
+      }
+
+      if (currentMode === 'blackhole') {
+        const { center, ball } = state;
+        const dx = center.x - ball.x;
+        const dy = center.y - ball.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) / WORLD.scale;
+        const speed = Math.hypot(ball.vx, ball.vy) / WORLD.scale;
+        setStats({
+          height: dist,
+          speed,
+          direction: 'Orbiting',
+          energy: `r ${dist.toFixed(2)} m`,
+          extra: `Pull ${Number(inputs.pull.value)}`
+        });
+      }
+
+      if (currentMode === 'freefall') {
+        const h = (WORLD.floorY - state.balls[0].y) / WORLD.scale;
+        const speed = Math.abs(state.balls[0].vy) / WORLD.scale;
+        const landed = state.balls.every(ball => ball.y >= WORLD.floorY) ? 'Both Landed' : 'Falling';
+        setStats({
+          height: h,
+          speed,
+          direction: landed,
+          energy: `g ${Number(inputs.gravity.value).toFixed(1)} m/s²`,
+          extra: 'Masses fall equally'
+        });
+      }
+
+      if (currentMode === 'spring') {
+        const x = Math.abs((state.block.x - state.equilibriumX) / WORLD.scale);
+        const speed = Math.abs(state.block.vx) / 2;
+        const force = (state.k * ((state.block.x - state.equilibriumX) / 100)).toFixed(1);
+        setStats({
+          height: x,
+          speed,
+          direction: state.block.vx > 0 ? 'Right' : 'Left',
+          energy: `F ${force} N`,
+          extra: `k ${state.k} N/m`
+        });
+      }
+
+      if (currentMode === 'collision') {
+        const totalP = (state.a.mass * state.a.vx + state.b.mass * state.b.vx) / WORLD.scale;
+        const avgSpeed = (Math.abs(state.a.vx) + Math.abs(state.b.vx)) / (2 * WORLD.scale);
+        setStats({
+          height: '1D',
+          speed: avgSpeed,
+          direction: state.collided ? 'After Impact' : 'Approaching',
+          energy: `p ${totalP.toFixed(1)}`,
+          extra: state.collided ? 'Momentum transferred' : 'Waiting for collision'
+        });
+      }
+
+      if (currentMode === 'circular') {
+        const radius = state.radius / WORLD.scale;
+        const tangential = (state.angular * state.radius) / WORLD.scale;
+        const ac = ((tangential * tangential) / Math.max(radius, 0.1)).toFixed(2);
+        setStats({
+          height: radius,
+          speed: tangential,
+          direction: 'Circular',
+          energy: `aᶜ ${ac}`,
+          extra: `ω ${state.angular.toFixed(1)}`
+        });
+      }
     }
 
     playBtn.addEventListener('click', () => {
@@ -637,14 +1290,22 @@
     });
 
     resetBtn.addEventListener('click', resetSimulation);
+
+    stepBtn.addEventListener('click', () => {
+      running = false;
+      stepSimulation(0.03);
+    });
+
     modeSelect.addEventListener('change', updateModeUI);
 
-    [velocityInput, angleInput, massInput, bounceInput, gravityInput, pullInput, orbitSpeedInput].forEach(input => {
-      input.addEventListener('change', () => {
+    Object.values(inputs).forEach(input => {
+      input.addEventListener('input', () => {
+        syncValueLabels();
         if (!running) resetSimulation();
       });
     });
 
+    syncValueLabels();
     updateModeUI();
   </script>
 </body>
