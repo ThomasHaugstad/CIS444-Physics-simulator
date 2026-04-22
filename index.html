@@ -483,6 +483,51 @@
             Tip: use Play to watch the full motion, or use Step to move frame by frame like a classroom demo.
           </p>
         </div>
+
+        <!-- ===== PRESETS PANEL (added for backend checkpoint) ===== -->
+        <div class="panel-inner" id="presetsPanel" style="border-top: 1px solid var(--line); padding-top: 18px;">
+          <h3 style="margin:0 0 12px; letter-spacing:-0.03em;">Save &amp; Load Presets</h3>
+
+          <!-- Auth form – toggles between login and register views -->
+          <div id="authSection">
+            <div id="authForm">
+              <div class="control-group">
+                <label for="authUsername">Username</label>
+                <input type="text" id="authUsername" placeholder="your username" style="border-radius:14px;" />
+              </div>
+              <div class="control-group">
+                <label for="authPassword">Password</label>
+                <input type="password" id="authPassword" placeholder="your password" style="border-radius:14px;" />
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+                <button class="primary" id="loginBtn" onclick="presetsAuth('login')">Login</button>
+                <button class="secondary" id="registerBtn" onclick="presetsAuth('register')">Register</button>
+              </div>
+              <p id="authMsg" style="margin:8px 0 0;font-size:0.85rem;color:var(--danger);min-height:1.2em;"></p>
+            </div>
+
+            <!-- Shown after successful login -->
+            <div id="loggedInSection" class="hidden">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <span style="font-size:0.9rem;color:var(--accent);" id="loggedInUser"></span>
+                <button class="secondary" onclick="presetsLogout()" style="width:auto;padding:6px 14px;font-size:0.82rem;border-radius:999px;">Logout</button>
+              </div>
+
+              <!-- Save a new preset -->
+              <div class="control-group">
+                <label for="presetNameInput">Preset name</label>
+                <input type="text" id="presetNameInput" placeholder="e.g. High bounce ball" style="border-radius:14px;" />
+              </div>
+              <button class="ghost" onclick="presetsSave()" style="margin-bottom:14px;">Save Current Settings</button>
+              <p id="saveMsg" style="margin:-10px 0 10px;font-size:0.85rem;color:var(--success);min-height:1.2em;"></p>
+
+              <!-- List of saved presets -->
+              <div id="presetsList" style="display:grid;gap:8px;"></div>
+            </div>
+          </div>
+        </div>
+        <!-- ===== END PRESETS PANEL ===== -->
+
       </aside>
 
       <main class="panel canvas-panel">
@@ -1307,6 +1352,206 @@
 
     syncValueLabels();
     updateModeUI();
+
+    // ===================================================================
+    // PRESETS FEATURE – communicates with the Express backend on port 3001
+    // ===================================================================
+    const API = 'http://localhost:3001/api';
+
+    // In-memory auth state (token is kept only for this page session)
+    let presetsToken = localStorage.getItem('presetsToken') || null;
+    let presetsUsername = localStorage.getItem('presetsUsername') || null;
+
+    // Restore login state across page refreshes
+    if (presetsToken) showLoggedIn();
+
+    // ---- Auth ----
+
+    async function presetsAuth(action) {
+      const username = document.getElementById('authUsername').value.trim();
+      const password = document.getElementById('authPassword').value;
+      const msg = document.getElementById('authMsg');
+      msg.textContent = '';
+
+      if (!username || !password) {
+        msg.textContent = 'Please fill in both fields.';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/auth/${action}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          msg.textContent = data.error || 'Something went wrong.';
+          return;
+        }
+
+        presetsToken = data.token;
+        presetsUsername = data.username;
+        localStorage.setItem('presetsToken', presetsToken);
+        localStorage.setItem('presetsUsername', presetsUsername);
+        showLoggedIn();
+        presetsLoadList();
+      } catch {
+        msg.textContent = 'Cannot reach the backend. Is the server running?';
+      }
+    }
+
+    function presetsLogout() {
+      presetsToken = null;
+      presetsUsername = null;
+      localStorage.removeItem('presetsToken');
+      localStorage.removeItem('presetsUsername');
+      document.getElementById('loggedInSection').classList.add('hidden');
+      document.getElementById('authForm').classList.remove('hidden');
+      document.getElementById('authUsername').value = '';
+      document.getElementById('authPassword').value = '';
+      document.getElementById('authMsg').textContent = '';
+    }
+
+    function showLoggedIn() {
+      document.getElementById('authForm').classList.add('hidden');
+      document.getElementById('loggedInSection').classList.remove('hidden');
+      document.getElementById('loggedInUser').textContent = `Logged in as ${presetsUsername}`;
+      presetsLoadList();
+    }
+
+    // ---- Save ----
+
+    async function presetsSave() {
+      const name = document.getElementById('presetNameInput').value.trim();
+      const saveMsg = document.getElementById('saveMsg');
+      saveMsg.style.color = 'var(--danger)';
+      saveMsg.textContent = '';
+
+      if (!name) {
+        saveMsg.textContent = 'Please enter a preset name.';
+        return;
+      }
+
+      // Collect all current slider values into a plain object
+      const settings = {};
+      Object.entries(inputs).forEach(([key, el]) => {
+        settings[key] = el.value;
+      });
+
+      try {
+        const res = await fetch(`${API}/presets`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${presetsToken}`
+          },
+          body: JSON.stringify({ name, mode: currentMode, settings })
+        });
+
+        if (res.status === 403) { presetsLogout(); return; }
+        const data = await res.json();
+        if (!res.ok) { saveMsg.textContent = data.error || 'Save failed.'; return; }
+
+        saveMsg.style.color = 'var(--success)';
+        saveMsg.textContent = `"${name}" saved!`;
+        document.getElementById('presetNameInput').value = '';
+        presetsLoadList();
+        setTimeout(() => { saveMsg.textContent = ''; }, 2500);
+      } catch {
+        saveMsg.textContent = 'Cannot reach the backend.';
+      }
+    }
+
+    // ---- Load list ----
+
+    async function presetsLoadList() {
+      const container = document.getElementById('presetsList');
+      container.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;">Loading…</p>';
+
+      try {
+        const res = await fetch(`${API}/presets`, {
+          headers: { 'Authorization': `Bearer ${presetsToken}` }
+        });
+
+        if (res.status === 403) { presetsLogout(); return; }
+        const presets = await res.json();
+
+        if (presets.length === 0) {
+          container.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;">No presets saved yet.</p>';
+          return;
+        }
+
+        container.innerHTML = presets.map(p => `
+          <div class="mini-card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div>
+              <div style="font-weight:700;font-size:0.9rem;">${escHtml(p.name)}</div>
+              <div style="font-size:0.8rem;color:var(--muted);">${escHtml(p.mode)}</div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="primary" onclick="presetsLoad(${p.id})"
+                style="width:auto;padding:6px 12px;font-size:0.8rem;border-radius:999px;">Load</button>
+              <button class="danger" onclick="presetsDelete(${p.id})"
+                style="width:auto;padding:6px 12px;font-size:0.8rem;border-radius:999px;">Delete</button>
+            </div>
+          </div>
+        `).join('');
+
+        // Cache preset data so we can load without another fetch
+        container.dataset.presets = JSON.stringify(presets);
+      } catch {
+        container.innerHTML = '<p style="color:var(--danger);font-size:0.85rem;">Could not load presets.</p>';
+      }
+    }
+
+    // ---- Load a preset into the sliders ----
+
+    async function presetsLoad(id) {
+      const container = document.getElementById('presetsList');
+      const presets = JSON.parse(container.dataset.presets || '[]');
+      const preset = presets.find(p => p.id === id);
+      if (!preset) return;
+
+      // Switch mode first so the right control section becomes visible
+      modeSelect.value = preset.mode;
+
+      // Apply each saved slider value
+      const settings = preset.settings;
+      Object.entries(settings).forEach(([key, val]) => {
+        if (inputs[key]) inputs[key].value = val;
+      });
+
+      syncValueLabels();
+      updateModeUI(); // resets simulation with new values
+    }
+
+    // ---- Delete ----
+
+    async function presetsDelete(id) {
+      try {
+        const res = await fetch(`${API}/presets/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${presetsToken}` }
+        });
+        if (res.status === 403) { presetsLogout(); return; }
+        presetsLoadList();
+      } catch {
+        alert('Could not delete preset. Is the server running?');
+      }
+    }
+
+    // Small helper to prevent XSS when rendering user-supplied strings into innerHTML
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+    // ===================================================================
+    // END PRESETS FEATURE
+    // ===================================================================
   </script>
 </body>
 </html>
