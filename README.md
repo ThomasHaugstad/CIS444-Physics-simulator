@@ -1,70 +1,116 @@
-# Physics Simulator – Learning Edition
+# Physics Sim: Learning Edition
 
-An interactive physics sandbox for students with a **Save & Load Presets** backend checkpoint.
+An interactive, browser-based physics simulator for students. Explore 7 physics concepts in real time, with user accounts and saved presets backed by a REST API and SQLite database.
 
-## Tech stack
+**Live app:** ` https://cis444-physics-simulator.onrender.com/`
+---
 
-| Layer      | Technology                                  |
-|------------|---------------------------------------------|
-| Frontend   | Vanilla HTML / CSS / JS (single `index.html`) |
-| Backend    | Node.js + Express                           |
-| Database   | SQLite via `better-sqlite3`                 |
-| Auth       | JWT (`jsonwebtoken`) + password hashing (`bcrypt`) |
+## Features
+
+- **7 simulation modes** — Projectile Motion, Gravity Drop & Bounce, Black Hole Orbit, Free Fall Comparison, Hooke's Law Spring, Momentum Collision, Uniform Circular Motion
+- **Real-time canvas rendering** with adjustable sliders for mass, velocity, gravity, angle, and more
+- **Educational panels** — concept explanation, formula, and student tips for each mode
+- **Live data display** — time, height, speed, direction, energy/force updated every frame
+- **User accounts** — register and log in with JWT-based authentication
+- **Save & load presets** — store any slider configuration to your account and reload it later
+- **Rename and delete presets** — full preset management
+- **Responsive layout** — adapts to desktop, tablet, and mobile
 
 ---
 
-## Running locally
+## Architecture
 
-### 1. Start the backend
+3-tier architecture:
+
+```
+Browser (HTML/CSS/JS)
+        ↓  HTTP (GET/POST/PATCH/DELETE)
+Express REST API  (Node.js)
+        ↓  SQL queries
+SQLite Database  (better-sqlite3)
+```
+
+The Express server serves both the static frontend and the `/api` routes from a single deployment, so there is no cross-origin issue in production.
+
+---
+
+## Tech Stack
+
+| Layer      | Technology                                          |
+|------------|-----------------------------------------------------|
+| Frontend   | Vanilla HTML / CSS / JavaScript                     |
+| Backend    | Node.js + Express                                   |
+| Database   | SQLite via `better-sqlite3`                         |
+| Auth       | JWT (`jsonwebtoken`) + bcrypt password hashing      |
+| Deployment | Render (free tier)                                  |
+
+---
+
+## Running Locally
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/ThanhDatVu111/CIS444-Physics-simulator.git
+cd CIS444-Physics-simulator
+```
+
+### 2. Start the backend
 
 ```bash
 cd backend
-
-# First time only – install dependencies
 npm install
-
-# Copy the example env file and edit if needed
-cp .env.example .env
-
-# Start the server (runs on http://localhost:3001)
-npm start
+cp .env.example .env   # edit JWT_SECRET with any long random string
+npm start              # runs on http://localhost:3001
 ```
 
 For auto-reload during development:
 ```bash
-npm run dev   # uses Node's built-in --watch flag (Node 18+)
+npm run dev   # requires Node 18+
 ```
 
-### 2. Open the frontend
+### 3. Open the frontend
 
-Open `index.html` directly in your browser, **or** serve it with any static server:
-
-```bash
-# From the project root
-npx serve .
-# Then visit http://localhost:3000
+The backend serves the frontend automatically. Visit:
+```
+http://localhost:3001
 ```
 
-> The backend must be running on port 3001 before you use the Presets panel.
+> In development the frontend also works by opening `index.html` directly in a browser — it auto-detects localhost and points API calls to port 3001.
 
 ---
 
-## API endpoints
+## API Endpoints
 
-| Method | Path                    | Auth required | Description             |
-|--------|-------------------------|---------------|-------------------------|
-| POST   | `/api/auth/register`    | No            | Create a new account    |
-| POST   | `/api/auth/login`       | No            | Get a JWT token         |
-| GET    | `/api/presets`          | Yes (JWT)     | List your saved presets |
-| POST   | `/api/presets`          | Yes (JWT)     | Save a new preset       |
-| DELETE | `/api/presets/:id`      | Yes (JWT)     | Delete a preset by id   |
-| GET    | `/api/health`           | No            | Confirm server is up    |
+| Method   | Path                 | Auth      | Description                        |
+|----------|----------------------|-----------|------------------------------------|
+| POST     | `/api/auth/register` | No        | Create a new account               |
+| POST     | `/api/auth/login`    | No        | Log in and receive a JWT token     |
+| GET      | `/api/presets`       | Yes (JWT) | List all presets for the logged-in user |
+| POST     | `/api/presets`       | Yes (JWT) | Save a new preset                  |
+| PATCH    | `/api/presets/:id`   | Yes (JWT) | Rename an existing preset          |
+| DELETE   | `/api/presets/:id`   | Yes (JWT) | Delete a preset                    |
+| GET      | `/api/health`        | No        | Health check — returns `{status:"ok"}` |
 
-Pass the token as `Authorization: Bearer <token>` in the request header.
+All protected routes require `Authorization: Bearer <token>` in the request header.
 
 ---
 
-## Database schema
+## Environment Variables
+
+Copy `.env.example` to `.env` and fill in:
+
+```
+PORT=3001
+JWT_SECRET=your_long_random_secret_here
+DB_PATH=./physics.db
+```
+
+Never commit your `.env` file — it is listed in `.gitignore`.
+
+---
+
+## Database Schema
 
 ```sql
 CREATE TABLE users (
@@ -86,28 +132,76 @@ CREATE TABLE presets (
 
 ---
 
-## Project structure
+## Security
+
+- Passwords hashed with **bcrypt** (10 salt rounds) — never stored in plain text
+- **JWT tokens** expire after 24 hours and are sent via `Authorization` header
+- All preset routes verify the token and that the preset belongs to the requesting user before any read/write/delete
+- User input is validated on both frontend and backend before hitting the database
+- HTML output is escaped with a custom `escHtml()` function to prevent XSS
+- Secrets (`JWT_SECRET`) are stored in environment variables, not source control
+- Parameterized SQL queries via `better-sqlite3` prevent SQL injection
+
+---
+
+## Project Structure
 
 ```
 CIS444-Physics-simulator/
-├── index.html              # Frontend – simulation + presets UI
-├── style.css               # (intentionally minimal; styles live in index.html)
-├── js/                     # Simulation logic (untouched)
-│   ├── app.js
-│   ├── simulationManager.js
-│   ├── renderer.js
+├── index.html                  # Frontend — simulation UI, canvas, presets panel
+├── style.css                   # Base styles (extended styles live in index.html)
+├── js/                         # Frontend modules
+│   ├── app.js                  # App entry point
+│   ├── simulationManager.js    # Simulation loop and state management
+│   ├── renderer.js             # Canvas rendering helpers
 │   └── modes/
-│       ├── blackhole.js
-│       ├── gravity.js
-│       └── projectile.js
+│       ├── projectile.js       # Projectile motion logic
+│       ├── gravity.js          # Gravity drop and bounce logic
+│       └── blackhole.js        # Black hole orbit logic
 └── backend/
-    ├── server.js           # Express entry point
-    ├── db.js               # SQLite setup
+    ├── server.js               # Express entry point, CORS, static serving
+    ├── db.js                   # SQLite connection and schema init
     ├── package.json
-    ├── .env.example
+    ├── .env.example            # Environment variable template
     ├── middleware/
-    │   └── auth.js         # JWT verification middleware
+    │   └── auth.js             # JWT verification middleware
     └── routes/
-        ├── auth.js         # /api/auth/register and /api/auth/login
-        └── presets.js      # /api/presets CRUD
+        ├── auth.js             # POST /api/auth/register, /api/auth/login
+        └── presets.js          # GET/POST/PATCH/DELETE /api/presets
 ```
+
+---
+
+## Simulation Modes
+
+| Mode | Physics Concept |
+|------|----------------|
+| Projectile Motion | Horizontal + vertical motion under gravity |
+| Gravity Drop & Bounce | Free fall with energy loss on bounce |
+| Black Hole Orbit | Inverse-square gravitational attraction |
+| Free Fall Comparison | Two masses falling at the same rate (equivalence principle) |
+| Hooke's Law Spring | Oscillating mass on spring (F = −kx) |
+| Momentum Collision | 1D elastic collision between two masses |
+| Uniform Circular Motion | Constant-radius orbit with centripetal acceleration |
+
+---
+
+## Team
+
+- Thanh Dat Vu
+- Thomas Haugstad
+- Alex
+- David
+
+CIS 444 – Web Programming, Spring 2026
+
+---
+
+## Libraries & Credits
+
+- [Express](https://expressjs.com/) — web framework
+- [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) — synchronous SQLite driver
+- [jsonwebtoken](https://github.com/auth0/node-jsonwebtoken) — JWT implementation
+- [bcrypt](https://github.com/kelektiv/node.bcrypt.js) — password hashing
+- [dotenv](https://github.com/motdotla/dotenv) — environment variable loading
+- [cors](https://github.com/expressjs/cors) — CORS middleware
