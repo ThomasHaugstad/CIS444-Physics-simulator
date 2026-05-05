@@ -190,8 +190,9 @@ CIS444-Physics-simulator/
 
 - Thanh Dat Vu
 - Thomas Haugstad
-- Alex
-- David
+- Alex Zamora Posadas
+- David Baez
+
 
 CIS 444 – Web Programming, Spring 2026
 
