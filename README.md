@@ -205,3 +205,5 @@ CIS 444 – Web Programming, Spring 2026
 - [bcrypt](https://github.com/kelektiv/node.bcrypt.js) — password hashing
 - [dotenv](https://github.com/motdotla/dotenv) — environment variable loading
 - [cors](https://github.com/expressjs/cors) — CORS middleware
+- **Claude (Anthropic)** – https://claude.ai
+- **ChatGPT (OpenAI)** – https://chatgpt.com
