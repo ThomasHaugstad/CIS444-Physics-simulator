@@ -1,0 +1,29 @@
+{
+  "name": "cis444-physics-simulator",
+  "version": "1.0.0",
+  "description": "An interactive physics sandbox for students with a **Save & Load Presets** backend checkpoint.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DavidB456/CIS444-Physics-simulator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/DavidB456/CIS444-Physics-simulator/issues"
+  },
+  "homepage": "https://github.com/DavidB456/CIS444-Physics-simulator#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^12.9.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3"
+  }
+}
